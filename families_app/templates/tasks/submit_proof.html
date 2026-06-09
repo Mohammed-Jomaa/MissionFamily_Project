@@ -1,0 +1,105 @@
+{% load static %}
+{% load media_extras %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مهامي</title>
+  <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" />
+  <link href="{% static 'CSS/style.css' %}" rel="stylesheet" />
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar navbar-light bg-white shadow-sm">
+      <div class="container d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+          <img src="{% static 'images/logo.png' %}" width="40" height="40" />
+          <span class="fw-bold brand-orange fs-5">بُناة المستقبل</span>
+        </div>
+        <a href="{% url 'logout' %}" class="btn btn-orange">تسجيل الخروج</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container py-5">
+    <div class="card p-4 shadow-sm">
+      <h3 class="fw-bold">{{ task.title }}</h3>
+      <p>{{ task.description }}</p>
+
+      {% if task.due_date %}
+      <p class="text-muted mb-1">📅 موعد التسليم: {{ task.due_date }}</p>
+      {% endif %}
+
+      {% if task.is_closed %}
+      <span class="badge bg-danger mb-2" style="width: fit-content;">⏰ انتهى وقت هذه المهمة</span>
+      {% endif %}
+
+      {% for message in messages %}
+      {% if 'error' in message.tags %}
+      <div class="alert alert-danger mt-2">{{ message }}</div>
+      {% else %}
+      <div class="alert alert-{{ message.tags }} mt-2">{{ message }}</div>
+      {% endif %}
+      {% endfor %}
+
+      {% if my_submission %}
+      {% if my_submission.is_approved %}
+      <p class="text-success mt-3">✅ تمت الموافقة على هذه المهمة 🎉</p>
+      {% include 'tasks/_proof_files.html' with files=my_submission.files.all %}
+
+      {% elif my_submission.is_approved == False %}
+      <p class="text-danger mt-3">❌ تم رفض المهمة</p>
+      {% include 'tasks/_proof_files.html' with files=my_submission.files.all %}
+
+      {% if task.is_closed %}
+      <div class="alert alert-secondary mt-3">انتهى وقت المهمة، لا يمكن إعادة الإرسال.</div>
+      {% else %}
+      <form action="{% url 'submit_proof' task.id %}" method="POST" enctype="multipart/form-data" class="mt-3">
+        {% csrf_token %}
+        <div class="mb-2">
+          <label class="form-label">📤 إعادة إرسال الإثبات (صور / فيديو / صوت - يمكن اختيار أكثر من ملف):</label>
+          <input type="file" name="proof" accept="image/*,video/*,audio/*" class="form-control" multiple required>
+        </div>
+        <button type="submit" class="btn btn-warning w-100">إرسال من جديد</button>
+      </form>
+      {% endif %}
+
+      {% else %}
+      <p class="text-warning mt-3">⏳ تم الإرسال - بانتظار الموافقة</p>
+      {% include 'tasks/_proof_files.html' with files=my_submission.files.all %}
+      {% endif %}
+
+      {% else %}
+      {% if task.is_closed %}
+      <div class="alert alert-secondary mt-3">انتهى وقت هذه المهمة، لم يعد بالإمكان إرسال إثبات.</div>
+      {% else %}
+      <form action="{% url 'submit_proof' task.id %}" method="POST" enctype="multipart/form-data" class="mt-3">
+        {% csrf_token %}
+        <div class="mb-2">
+          <label class="form-label">📤 إرفاق إثبات (صور / فيديو / صوت - يمكن اختيار أكثر من ملف):</label>
+          <input type="file" name="proof" accept="image/*,video/*,audio/*" class="form-control" multiple required>
+        </div>
+        <button type="submit" class="btn btn-orange w-100">إرسال المهمة</button>
+      </form>
+      {% endif %}
+      {% endif %}
+
+    </div>
+    <div class="text-center mt-4">
+      <a href="{% url 'child_dashboard' %}" class="btn btn-outline-orange"> العودة </a>
+    </div>
+  </main>
+
+  <footer class="text-center text-muted py-3 mt-5">
+    <a href="{% url 'about' %}">من نحن</a> | جميع الحقوق محفوظة © 2025
+  </footer>
+
+
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+
+</html>

@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>من نحن</title>
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style.css' %}">
+</head>
+
+<body>
+
+    <header class="bg-white shadow-sm py-3">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h4 class="brand-orange m-0">بُناة المستقبل</h4>
+        </div>
+    </header>
+
+    <main class="container py-5">
+        <h2 class="fw-bold mb-4">من نحن</h2>
+        <p class="fs-5">
+            منصة <strong>"بُناة المستقبل"</strong> هي تطبيق عائلي تفاعلي يساعد الآباء على تنظيم المهام المنزلية
+            لأطفالهم،
+            وتحفيزهم على الإنجاز من خلال جمع النقاط واستبدالها بجوائز ممتعة.
+        </p>
+        <p class="fs-5">
+            تم تطوير هذا النظام باستخدام Django ويهدف إلى:
+        <ul class="fs-5">
+            <li>تعزيز الشعور بالمسؤولية لدى الأطفال</li>
+            <li>تحفيزهم على التعاون والالتزام</li>
+            <li>مساعدة الأهل على إدارة الأنشطة اليومية داخل البيت</li>
+        </ul>
+        </p>
+        <p class="text-muted mt-4">© 2025 جميع الحقوق محفوظة – المطوّر: محمد جمعة</p>
+        <div class="d-flex justify-content-end mb-4">
+        <a href="javascript:history.back()" class="btn btn-orange">عودة</a>
+      </div>
+    </main>
+
+
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+
+</html>

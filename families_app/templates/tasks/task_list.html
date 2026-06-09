@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>قائمة المهام</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'CSS/style.css' %}" rel="stylesheet" />
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-light bg-white shadow-sm">
+            <div class="container d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <img src="{% static 'images/logo.png' %}" width="40" height="40" />
+                    <span class="fw-bold brand-orange fs-5">بُناة المستقبل</span>
+                </div>
+                <a href="{% url 'logout' %}" class="btn btn-orange">تسجيل الخروج</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold">📋 قائمة المهام {{ family.name }}</h3>
+            <a href="{% url 'add_task' family.id %}" class="btn btn-orange">➕ إضافة مهمة</a>
+        </div>
+
+
+        {% if tasks %}
+        <div class="row g-4">
+            {% for task in tasks %}
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ task.title }}</h5>
+                        <p class="card-text text-muted">{{ task.description }}</p>
+                        <p class="text-end"><strong>تاريخ التسليم:</strong> {{ task.due_date }}</p>
+                        <p class="mb-2"> النقاط: <strong>{{ task.points }}</strong></p>
+                        <form id="delete-task-form-{{ task.id }}" action="{% url 'delete_task' task.id %}" method="post"
+                            style="display: none;">
+                            {% csrf_token %}
+                        </form>
+                        <button type="button" class="btn btn-danger mb-2"
+                            onclick="confirmDeleteTask({{ task.id }})">🗑️ حذف المهمة</button>
+
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-center text-muted">لا توجد مهام حتى الآن.</p>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{% url 'manage_family' family.id %}" class="btn btn-outline-orange"> العودة لإدارة العائلة</a>
+        </div>
+    </main>
+    <footer class="text-center text-muted py-3 mt-5">
+        <a href="{% url 'about' %}">من نحن</a> | جميع الحقوق محفوظة © 2025
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        function confirmDeleteTask(taskId) {
+            Swal.fire({
+                title: '🗑️ هل أنت متأكد؟',
+                text: "سيتم حذف المهمة نهائيًا!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، احذفها',
+                cancelButtonText: 'إلغاء',
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: 'btn btn-danger mx-2',
+                    cancelButton: 'btn btn-outline-secondary'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(`delete-task-form-${taskId}`).submit();
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>

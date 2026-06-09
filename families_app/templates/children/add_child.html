@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>إضافة طفل</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'CSS/style.css' %}" rel="stylesheet">
+</head>
+<body class="container py-5">
+
+  <h3 class="mb-4 fw-bold"> إضافة طفل  {{ family.name }}</h3>
+  <div id="message-area"></div>
+
+  <form id="childForm" method="POST">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label class="form-label">الاسم الأول</label>
+      <input type="text" name="first_name" class="form-control" required>
+      <small class="text-danger" id="error-first_name"></small>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">الاسم الأخير</label>
+      <input type="text" name="last_name" class="form-control" required>
+      <small class="text-danger" id="error-last_name"></small>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">البريد الإلكتروني</label>
+      <input type="email" name="email" class="form-control" required>
+      <small class="text-danger" id="error-email"></small>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">تاريخ الميلاد</label>
+      <input type="date" name="birth_day" class="form-control" required>
+      <small class="text-danger" id="error-birth_day"></small>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">كلمة المرور</label>
+      <input type="password" name="password" class="form-control" required>
+      <small class="text-danger" id="error-password"></small>
+    </div>
+        <div class="mb-3">
+      <label class="form-label">تأكيد كلمة المرور</label>
+      <input type="password" name="repeatPassword" class="form-control" required>
+        <small class="text-danger" id="error-repeatPassword"></small>
+    </div>
+
+    <button type="submit" class="btn btn-orange">إضافة</button>
+    <a href="{% url 'children' family.id %}" class="btn btn-outline-orange">رجوع</a>
+  </form>
+
+  <footer class="text-center text-muted py-3 mt-5">
+  <a href="{% url 'about' %}">من نحن</a> | جميع الحقوق محفوظة © 2025
+</footer>
+
+
+  <script>
+    document.getElementById('childForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = Object.fromEntries(new FormData(form));
+      const csrf = data['csrfmiddlewaretoken'];
+
+      document.querySelectorAll('small.text-danger').forEach(el => el.innerText = '');
+      document.getElementById('message-area').innerHTML = '';
+        const response = await fetch("{% url 'add_child' family.id %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrf,
+        },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        document.getElementById('message-area').innerHTML =
+          `<div class="alert alert-success">${result.message}</div>`;
+        form.reset();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        for (const [field, msg] of Object.entries(result.errors)) {
+          const errField = document.getElementById(`error-${field}`);
+          if (errField) errField.innerText = msg;
+          else document.getElementById('message-area').innerHTML +=
+            `<div class="alert alert-danger">${msg}</div>`;
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  </script>
+
+</body>
+</html>

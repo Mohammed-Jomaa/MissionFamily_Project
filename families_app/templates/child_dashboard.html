@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة تحكم الطفل</title>
+  <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" />
+  <link href="{% static 'CSS/style.css' %}" rel="stylesheet" />
+</head>
+
+<body>
+  <header>
+    <nav class="navbar navbar-light bg-white shadow-sm">
+      <div class="container d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+          <img src="{% static 'images/logo.png' %}" width="40" height="40" />
+          <span class="fw-bold brand-orange fs-5">بُناة المستقبل</span>
+        </div>
+        <a href="{% url 'logout' %}" class="btn btn-orange">تسجيل الخروج</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container py-5 text-center">
+
+    <div class="mb-4">
+      <h3 class="fw-bold">👋 مرحبًا {{ user.first_name }} في عائلتك!</h3>
+      <h5 class="text-muted mt-2">نقاطك الحالية:
+        <span class="fw-bold text-success">{{ points.points }}</span>
+      </h5>
+    </div>
+
+    <div class="alert alert-info text-center" id="motivation-box">
+      جاري تحميل جملة تحفيزية...
+    </div>
+
+    {% for message in messages %}
+    {% if 'error' in message.tags %}
+    <div class="alert alert-danger text-center">
+    {% else %}
+    <div class="alert alert-{{ message.tags }} text-center">
+    {% endif %}
+      {{ message }}
+    </div>
+    {% endfor %}
+
+    <!-- المهام -->
+    <section class="mb-5">
+      <h5 class="fw-bold mb-4">📋 المهام المطلوبة:</h5>
+      {% if tasks %}
+      <div class="row g-4">
+        {% for task in tasks %}
+        <div class="col-12 col-sm-6 col-md-4">
+          <div class="card shadow-sm p-3 h-100">
+            <h6 class="fw-bold">{{ task.title }}</h6>
+            <p class="mb-2">النقاط: <strong>{{ task.points }}</strong></p>
+            <p class="text-muted mb-2">تاريخ التسليم: {{ task.due_date|default:"غير محدد" }}</p>
+            {% if task.is_closed %}
+            <span class="badge bg-danger mb-2" style="align-self: center;">⏰ انتهى الوقت</span>
+            <a href="{% url 'submit_task' task.id %}" class="btn btn-sm btn-outline-secondary"
+              style="width: 50%; align-self: center;">عرض المهمة</a>
+            {% else %}
+            <a href="{% url 'submit_task' task.id %}" class="btn btn-sm btn-orange"
+              style="width: 50%; align-self: center;">تنفيذ المهمة</a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-muted">لا توجد مهام حالياً.</p>
+      {% endif %}
+    </section>
+
+    <!-- الجوائز -->
+    <section>
+      <h5 class="fw-bold mb-4">🎁 الجوائز المتاحة:</h5>
+      {% if rewards %}
+      <div class="row g-4">
+        {% for reward in rewards %}
+        <div class="col-12 col-sm-6 col-md-4">
+          <div class="card shadow-sm text-center h-100 p-3">
+
+            {% if reward.image %}
+            <img src="{{ reward.image.url }}" class="card-img-top"
+              style="height: 180px; object-fit: contain;" alt="جائزة">
+            {% else %}
+            <img src="{% static 'images/gift.png' %}" class="card-img-top"
+              style="height: 180px; object-fit: contain;" alt="جائزة افتراضية">
+            {% endif %}
+
+            <h6 class="fw-bold mt-2">{{ reward.title }}</h6>
+            <p class="mb-1">نقاط: {{ reward.points_cost }}</p>
+
+            <!-- الكمية المتبقية -->
+            <p class="text-muted mb-2" style="font-size: 0.82rem;">
+              متبقي:
+              {% if reward.remaining > 0 %}
+              <span class="text-success fw-bold">{{ reward.remaining }}</span>
+              {% else %}
+              <span class="text-danger fw-bold">نفدت</span>
+              {% endif %}
+              / {{ reward.quantity }}
+            </p>
+
+            <!-- أزرار الاستبدال -->
+            {% if reward.id in claimed_reward_ids %}
+              <button class="btn btn-sm btn-success" disabled>✅ حصلت على الجائزة بالفعل</button>
+
+            {% elif reward.remaining <= 0 %}
+              <button class="btn btn-sm btn-secondary" disabled>نفدت الكمية</button>
+
+            {% else %}
+              <form id="claim-form-{{ reward.id }}" method="POST"
+                action="{% url 'claim_reward' reward.id %}">
+                {% csrf_token %}
+              </form>
+              <button type="button" class="btn btn-sm btn-outline-orange"
+                onclick="confirmClaim({{ reward.id }}, '{{ reward.title }}', {{ reward.points_cost }})">
+                استبدال
+              </button>
+            {% endif %}
+
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-muted">لا توجد جوائز حالياً.</p>
+      {% endif %}
+    </section>
+
+  </main>
+
+  <footer class="text-center text-muted py-3 mt-5">
+    <a href="{% url 'about' %}">من نحن</a> | جميع الحقوق محفوظة © 2025
+  </footer>
+
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      fetch("{% url 'motivation_api' %}")
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("motivation-box").innerText = data.quote;
+        })
+        .catch(() => {
+          document.getElementById("motivation-box").innerText = "ابقَ متحفزًا دائمًا!";
+        });
+    });
+
+    function confirmClaim(rewardId, rewardTitle, rewardPoints) {
+      Swal.fire({
+        title: 'هل تريد استبدال الجائزة؟',
+        html: `<strong>${rewardTitle}</strong><br><small class="text-muted">تكلف ${rewardPoints} نقطة</small>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، استبدل',
+        cancelButtonText: 'إلغاء',
+        reverseButtons: true,
+        customClass: {
+          confirmButton: 'btn btn-success mx-2',
+          cancelButton: 'btn btn-outline-secondary'
+        },
+        buttonsStyling: false
+      }).then((result) => {
+        if (result.isConfirmed) {
+          document.getElementById(`claim-form-${rewardId}`).submit();
+        }
+      });
+    }
+  </script>
+</body>
+</html>

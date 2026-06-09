@@ -1,0 +1,133 @@
+body {
+  background-color: #f8f9fa;
+}
+
+.box-shadow {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.brand-orange {
+  color: #f27c0a;
+}
+
+.btn-orange {
+  background-color: #f27c0a;
+  color: white;
+  border: none;
+}
+
+.btn-orange:hover {
+  background-color: #d96800;
+}
+
+.btn-outline-orange {
+  border-color: #f27c0a;
+  color: #f27c0a;
+}
+
+.btn-outline-orange:hover {
+  background-color: #f27c0a;
+  color: white;
+}
+
+.form-container {
+  max-width: 600px;
+  margin: auto;
+  margin-top: 50px;
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.family-card {
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  background-color: white;
+}
+
+.reward-image-container {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.reward-image {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  border-radius: 10px;
+}
+
+.card-img-proof {
+  width: 100%;
+  height: 200px;
+  object-fit: fill;
+  border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 100% !important;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  #login-img {
+    display: none !important;
+  }
+
+  .login-form-container {
+    width: 100% !important;
+    padding: 25px 20px !important;
+  }
+
+  h4.text-orange {
+    font-size: 1.8rem;
+  }
+
+  .form-label,
+  .form-control,
+  .btn-orange {
+    font-size: 1.15rem;
+  }
+
+  .form-control {
+    padding: 14px;
+  }
+
+  footer {
+    font-size: 0.9rem;
+  }
+
+  .card {
+  width: 95% !important;
+  margin: auto;
+}
+
+.card-img-top {
+  height: 220px !important;
+  object-fit: fill;
+}
+
+.card-title {
+  font-size: 0.95rem !important;
+}
+
+.card-body {
+  padding: 0.5rem;
+}
+button {
+  width: 100%;
+  padding: 10px;
+}
+
+}

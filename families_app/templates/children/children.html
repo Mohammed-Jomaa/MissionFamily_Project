@@ -1,0 +1,58 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الأطفال</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'CSS/style.css' %}" rel="stylesheet" />
+</head>
+
+<body>
+  <header>
+    <nav class="navbar navbar-light bg-white shadow-sm">
+      <div class="container d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+          <img src="{% static 'images/logo.png' %}" width="40" height="40" />
+          <span class="fw-bold brand-orange fs-5">بُناة المستقبل</span>
+        </div>
+        <a href="{% url 'logout' %}" class="btn btn-orange">تسجيل الخروج</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container px-2 py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <h3 class="fw-bold mb-0">🧒 قائمة الأطفال في {{ family.name }}</h3>
+      <a href="{% url 'create_child' family.id %}" class="btn btn-orange">+ إضافة طفل</a>
+    </div>
+
+    {% if children_with_points %}
+    <div class="row g-4">
+      {% for item in children_with_points %}
+      <div class="col-12 col-sm-6 col-md-4 d-flex">
+        <div class="card shadow-sm w-100 text-center p-4 d-flex flex-column justify-content-center">
+          <h5 class="fw-bold mb-2">{{ item.child.first_name }} {{ item.child.last_name }}</h5>
+          <p class="mb-0">نقاطه الحالية: <strong>{{ item.points }}</strong></p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted text-center">لا يوجد أطفال مضافين حتى الآن.</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+      <a href="{% url 'manage_family' family.id %}" class="btn btn-outline-orange"> العودة لإدارة العائلة</a>
+    </div>
+  </main>
+
+  <footer class="text-center text-muted py-3 mt-5">
+    <a href="{% url 'about' %}">من نحن</a> | جميع الحقوق محفوظة © 2025
+  </footer>
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+
+</html>

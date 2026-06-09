@@ -1,0 +1,17 @@
+{% load media_extras %}
+{# قالب مشترك لعرض ملفات الإثبات (صور / فيديو / صوت). يستقبل: files #}
+<div class="row g-2 mt-2">
+  {% for f in files %}
+  <div class="col-12 col-sm-6">
+    {% if f.file.url|is_video %}
+    <video src="{{ f.file.url }}" class="img-fluid rounded" controls style="width:100%;"></video>
+    {% elif f.file.url|is_audio %}
+    <audio src="{{ f.file.url }}" controls style="width:100%;"></audio>
+    {% else %}
+    <img src="{{ f.file.url }}" class="img-fluid rounded" alt="إثبات" style="width:100%; object-fit:cover;">
+    {% endif %}
+  </div>
+  {% empty %}
+  <p class="text-muted">لا توجد ملفات.</p>
+  {% endfor %}
+</div>

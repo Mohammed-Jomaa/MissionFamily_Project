@@ -1,0 +1,75 @@
+{% load static %}
+{% load media_extras %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>مراجعة المهام</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'CSS/style.css' %}" rel="stylesheet" />
+</head>
+
+<body>
+    <main class="container px-2 py-4">
+        <h3 class="fw-bold mb-4 text-center">
+            📋 المهام المرسلة للموافقة - {{ family.name }}
+        </h3>
+
+        {% if submissions %}
+        <div class="row g-4 justify-content-center">
+            {% for sub in submissions %}
+            <div class="col-12 col-sm-12 col-md-4 d-flex">
+                <div class="card shadow-sm w-100 text-center p-3 d-flex flex-column">
+                    <h5 class="fw-bold">{{ sub.task.title }}</h5>
+                    <p>مرسلة من: {{ sub.child.first_name }} {{ sub.child.last_name }}</p>
+                    <p>النقاط: {{ sub.task.points }}</p>
+
+                    {% if sub.is_late %}
+                    <span class="badge bg-danger mb-2" style="align-self:center;">⏰ سُلّمت متأخرة</span>
+                    <p class="text-muted mb-2" style="font-size: 0.8rem;">
+                        الموعد: {{ sub.task.due_date }} · التسليم: {{ sub.submitted_at|date:"Y-m-d" }}
+                    </p>
+                    {% else %}
+                    <span class="badge bg-success mb-2" style="align-self:center;">✅ سُلّمت في الوقت</span>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        {% include 'tasks/_proof_files.html' with files=sub.files.all %}
+                    </div>
+
+                    {% if sub.is_approved %}
+                    <div class="alert alert-success mt-auto mb-0">تمت الموافقة ✅</div>
+                    {% elif sub.is_approved == False %}
+                    <div class="alert alert-danger mt-auto mb-0">تم الرفض ❌</div>
+                    {% else %}
+                    <form action="{% url 'approve_submission' sub.id %}" method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success w-100">✔️ الموافقة على المهمة</button>
+                    </form>
+                    <form action="{% url 'reject_submission' sub.id %}" method="POST" class="mt-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger w-100">❌ رفض المهمة</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center">لا توجد مهام للمراجعة حاليًا.</p>
+        {% endif %}
+        <div class="text-center mt-4">
+            <a href="{% url 'manage_family' family.id %}" class="btn btn-outline-orange"> العودة لإدارة العائلة</a>
+        </div>
+    </main>
+
+    <footer class="text-center text-muted py-3 mt-5">
+        <a href="{% url 'about' %}">من نحن</a> | جميع الحقوق محفوظة © 2025
+    </footer>
+
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+
+</html>
