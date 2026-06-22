@@ -28,28 +28,39 @@
 
                     {% if sub.is_late %}
                     <span class="badge bg-danger mb-2" style="align-self:center;">⏰ سُلّمت متأخرة</span>
-                    <p class="text-muted mb-2" style="font-size: 0.8rem;">
-                        الموعد: {{ sub.task.due_date }} · التسليم: {{ sub.submitted_at|date:"Y-m-d" }}
-                    </p>
                     {% else %}
                     <span class="badge bg-success mb-2" style="align-self:center;">✅ سُلّمت في الوقت</span>
                     {% endif %}
+                    <p class="text-muted mb-2" style="font-size: 0.85rem;">
+                        🕒 وقت التسليم: {{ sub.submitted_at|date:"Y-m-d" }} الساعة {{ sub.submitted_at|time:"H:i" }}
+                        {% if sub.task.due_date %}
+                        <br>📅 الموعد النهائي: {{ sub.task.due_date }}
+                        {% endif %}
+                    </p>
 
                     <div class="mb-3">
                         {% include 'tasks/_proof_files.html' with files=sub.files.all %}
                     </div>
 
                     {% if sub.is_approved %}
-                    <div class="alert alert-success mt-auto mb-0">تمت الموافقة ✅</div>
+                    <div class="alert alert-success mt-auto mb-0">
+                        تمت الموافقة ✅
+                        {% if sub.approval_note %}<br><small>ملاحظة: {{ sub.approval_note }}</small>{% endif %}
+                    </div>
                     {% elif sub.is_approved == False %}
-                    <div class="alert alert-danger mt-auto mb-0">تم الرفض ❌</div>
+                    <div class="alert alert-danger mt-auto mb-0">
+                        تم الرفض ❌
+                        {% if sub.rejection_reason %}<br><small>السبب: {{ sub.rejection_reason }}</small>{% endif %}
+                    </div>
                     {% else %}
                     <form action="{% url 'approve_submission' sub.id %}" method="POST">
                         {% csrf_token %}
+                        <textarea name="approval_note" class="form-control mb-2" rows="2" placeholder="ملاحظة / تشجيع (اختياري)"></textarea>
                         <button type="submit" class="btn btn-success w-100">✔️ الموافقة على المهمة</button>
                     </form>
                     <form action="{% url 'reject_submission' sub.id %}" method="POST" class="mt-2">
                         {% csrf_token %}
+                        <textarea name="rejection_reason" class="form-control mb-2" rows="2" placeholder="سبب الرفض (اختياري)"></textarea>
                         <button type="submit" class="btn btn-danger w-100">❌ رفض المهمة</button>
                     </form>
                     {% endif %}
@@ -70,6 +81,22 @@
     </footer>
 
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+    // حفظ مكان التمرير قبل إرسال أي فورم (موافقة/رفض)
+    document.querySelectorAll('form').forEach(function(f) {
+        f.addEventListener('submit', function() {
+            sessionStorage.setItem('reviewScroll', window.scrollY);
+        });
+    });
+    // استرجاع مكان التمرير بعد إعادة تحميل الصفحة
+    window.addEventListener('load', function() {
+        const y = sessionStorage.getItem('reviewScroll');
+        if (y !== null) {
+            window.scrollTo(0, parseInt(y));
+            sessionStorage.removeItem('reviewScroll');
+        }
+    });
+    </script>
 </body>
 
 </html>

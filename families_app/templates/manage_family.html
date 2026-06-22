@@ -104,6 +104,15 @@
         </div>
 
         <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+          <a href="{% url 'children_progress' family.id %}" class="card shadow-sm h-100 text-decoration-none text-dark d-block">
+            <img src="{% static 'images/tttt.png' %}" class="card-img-top" alt="تقدّم الأطفال">
+            <div class="card-body">
+              <h5 class="card-title">📊 تقدّم الأطفال</h5>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
           <a href="{% url 'rewards' family.id %}" class="card shadow-sm h-100 text-decoration-none text-dark d-block">
             <img src="{% static 'images/climped.png' %}" class="card-img-top" alt="الجوائز والنقاط">
             <div class="card-body">
@@ -111,6 +120,14 @@
             </div>
           </a>
         </div>
+      </div>
+
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="fw-bold mb-3">📥 تنزيل ملخص يوم (المهام والأولاد - بدون فيديوهات)</h5>
+        <form action="{% url 'download_day_summary' family.id %}" method="get" class="d-flex gap-2 flex-wrap align-items-center">
+          <input type="date" name="day" class="form-control" style="max-width: 220px;" required>
+          <button type="submit" class="btn btn-success">⬇️ تنزيل</button>
+        </form>
       </div>
 
       <div class="d-flex justify-content-end mb-4">

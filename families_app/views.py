@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect
+from django.utils import timezone
 from .models import *
 from django.contrib import messages
 import bcrypt
 from django.http import JsonResponse
 import json
 from django.urls import reverse
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.shortcuts import get_object_or_404
 import random
 
@@ -74,6 +75,9 @@ def login_user(request):
             return JsonResponse({'success': False, 'errors': errors})
 
         user = User.objects.filter(email=data['loginEmail']).first()
+        from django.utils import timezone
+        user.last_login_at = timezone.now()
+        user.save()
         request.session.cycle_key()
         request.session['name'] = f"{user.first_name} {user.last_name}"
         request.session['user_id'] = user.id
@@ -214,6 +218,7 @@ def add_task(request, id):
             description=data.get('description', ''),
             due_date=data.get('due_date') or None,
             points=data.get('points'),
+            suggested_time=data.get('suggested_time', ''),
             family=family,
             created_by=user
         )
@@ -253,6 +258,7 @@ def approve_submission(request, id):
 
     submission = get_object_or_404(TaskSubmission, id=id)
     submission.is_approved = True
+    submission.approval_note = request.POST.get('approval_note', '').strip()
     submission.save()
 
     task_points = submission.task.points or 0
@@ -272,6 +278,7 @@ def reject_submission(request, id):
 
     submission = get_object_or_404(TaskSubmission, id=id)
     submission.is_approved = False
+    submission.rejection_reason = request.POST.get('rejection_reason', '').strip()
     submission.save()
     return redirect('review_tasks', id=submission.task.family.id)
 
@@ -344,6 +351,96 @@ def add_child(request, id):
         return JsonResponse({'success': True, 'message': 'تم إضافة الطفل بنجاح!'})
 
     return JsonResponse({'success': False, 'errors': {'general': 'طلب غير صالح'}})
+
+
+def children_progress(request, id):
+    user = get_current_user(request)
+    if not user or user.role != 'parent':
+        return redirect('index')
+
+    family = get_object_or_404(Family, id=id)
+    total_tasks = Task.objects.filter(family=family).count()
+
+    children_members = FamilyMember.objects.filter(family=family, user__role='child')
+    progress = []
+    for member in children_members:
+        child = member.user
+        done = TaskSubmission.objects.filter(
+            task__family=family, child=child, is_approved=True
+        ).values('task').distinct().count()
+        percent = round((done / total_tasks) * 100) if total_tasks else 0
+        progress.append({
+            'child': child,
+            'done': done,
+            'total': total_tasks,
+            'percent': percent,
+        })
+
+    progress.sort(key=lambda x: x['done'], reverse=True)
+
+    return render(request, 'children/children_progress.html', {
+        'family': family,
+        'progress': progress,
+        'total_tasks': total_tasks,
+    })
+
+
+def download_day_summary(request, id):
+    user = get_current_user(request)
+    if not user or user.role != 'parent':
+        return redirect('index')
+
+    family = get_object_or_404(Family, id=id)
+
+    import io, zipfile
+    from datetime import datetime
+    from django.http import HttpResponse
+
+    day_str = request.GET.get('day')  # صيغة YYYY-MM-DD
+    if not day_str:
+        day = timezone.now().date()
+    else:
+        try:
+            day = datetime.strptime(day_str, '%Y-%m-%d').date()
+        except ValueError:
+            day = timezone.now().date()
+
+    all_subs = TaskSubmission.objects.filter(
+        task__family=family
+    ).select_related('task', 'child').order_by('task__id', 'submitted_at')
+    # تصفية حسب اليوم بتوقيت فلسطين (لأن الوقت مخزّن UTC)
+    subs = [s for s in all_subs if timezone.localtime(s.submitted_at).date() == day]
+
+    def safe(name):
+        for ch in '/\\:*?"<>|':
+            name = name.replace(ch, '_')
+        return name.strip()
+
+    buffer = io.BytesIO()
+    task_lines = {}
+    task_order = {}
+    for s in subs:
+        if s.task.id not in task_order:
+            task_order[s.task.id] = (len(task_order) + 1, s.task.title)
+        num, title = task_order[s.task.id]
+        folder = f"{num:02d} - {safe(title)}"
+        time_str = timezone.localtime(s.submitted_at).strftime('%H:%M')
+        status = 'مقبول' if s.is_approved else ('مرفوض' if s.is_approved is False else 'بانتظار')
+        line = f"{s.child.first_name} {s.child.last_name} - {time_str} - {status}\n"
+        task_lines.setdefault(folder, []).append(line)
+
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        if not task_lines:
+            zf.writestr(f"{day}/لا_توجد_تسليمات.txt", "لا توجد تسليمات في هذا اليوم")
+        else:
+            for folder, lines in task_lines.items():
+                content_txt = "".join(lines)
+                zf.writestr(f"{day}/{folder}/_الأولاد.txt", content_txt)
+
+    buffer.seek(0)
+    resp = HttpResponse(buffer.read(), content_type='application/zip')
+    resp['Content-Disposition'] = f'attachment; filename="summary_{day}.zip"'
+    return resp
 
 
 # ====== REWARDS ======
@@ -430,9 +527,26 @@ def child_dashboard(request):
     if not user or user.role != 'child':
         return redirect('index')
 
+    from datetime import date
     family_member = FamilyMember.objects.filter(user=user).first()
     family = family_member.family
-    tasks = Task.objects.filter(family=family)
+    # إخفاء المهام التي انتهى وقتها (تبقى محفوظة، فقط لا تظهر للطفل)
+    tasks = Task.objects.filter(family=family).filter(
+        Q(due_date__isnull=True) | Q(due_date__gte=date.today())
+    )
+
+    # تجهيز حالة التسليم لكل مهمة
+    for t in tasks:
+        sub = TaskSubmission.objects.filter(task=t, child=user).order_by('-submitted_at').first()
+        if not sub:
+            t.my_status = 'none'
+        elif sub.is_approved is True:
+            t.my_status = 'approved'
+        elif sub.is_approved is False:
+            t.my_status = 'rejected'
+        else:
+            t.my_status = 'pending'
+
     total_points = PointsTransaction.objects.filter(child=user).aggregate(
         total=Sum('points')
     )['total'] or 0
@@ -504,13 +618,23 @@ def submit_proof(request, task_id):
                 )
                 return redirect('submit_task', id=task_id)
 
+        # منع التسليم إذا كان هناك تسليم بانتظار الموافقة أو مقبول
+        existing = TaskSubmission.objects.filter(task=task, child=user).exclude(is_approved=False).first()
+        if existing:
+            if existing.is_approved is True:
+                messages.error(request, 'لقد تم قبول تسليمك لهذه المهمة مسبقاً.')
+            else:
+                messages.error(request, 'لديك تسليم بانتظار الموافقة، لا يمكنك التسليم مرة أخرى.')
+            return redirect('submit_task', id=task_id)
+
         # حذف أي تسليم مرفوض سابق (تُحذف ملفاته تلقائياً عبر CASCADE)
         TaskSubmission.objects.filter(task=task, child=user, is_approved=False).delete()
 
         submission = TaskSubmission.objects.create(
             task=task,
             child=user,
-            is_approved=None
+            is_approved=None,
+            child_note=request.POST.get('child_note', '').strip()
         )
         for f in files:
             SubmissionFile.objects.create(submission=submission, file=f)

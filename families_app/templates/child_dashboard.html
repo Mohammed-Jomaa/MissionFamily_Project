@@ -57,6 +57,16 @@
             <h6 class="fw-bold">{{ task.title }}</h6>
             <p class="mb-2">النقاط: <strong>{{ task.points }}</strong></p>
             <p class="text-muted mb-2">تاريخ التسليم: {{ task.due_date|default:"غير محدد" }}</p>
+            {% if task.suggested_time %}
+            <p class="mb-2"><span class="badge bg-info text-dark">🕌 الوقت المناسب: {{ task.suggested_time }}</span></p>
+            {% endif %}
+            {% if task.my_status == 'approved' %}
+            <span class="badge bg-success mb-2" style="align-self: center;">✅ تمت الموافقة</span>
+            {% elif task.my_status == 'rejected' %}
+            <span class="badge bg-danger mb-2" style="align-self: center;">❌ مرفوضة - أعد التسليم</span>
+            {% elif task.my_status == 'pending' %}
+            <span class="badge bg-warning text-dark mb-2" style="align-self: center;">⏳ بانتظار الموافقة</span>
+            {% endif %}
             {% if task.is_closed %}
             <span class="badge bg-danger mb-2" style="align-self: center;">⏰ انتهى الوقت</span>
             <a href="{% url 'submit_task' task.id %}" class="btn btn-sm btn-outline-secondary"

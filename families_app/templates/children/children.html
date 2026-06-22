@@ -35,7 +35,14 @@
       <div class="col-12 col-sm-6 col-md-4 d-flex">
         <div class="card shadow-sm w-100 text-center p-4 d-flex flex-column justify-content-center">
           <h5 class="fw-bold mb-2">{{ item.child.first_name }} {{ item.child.last_name }}</h5>
-          <p class="mb-0">نقاطه الحالية: <strong>{{ item.points }}</strong></p>
+          <p class="mb-1">نقاطه الحالية: <strong>{{ item.points }}</strong></p>
+          <p class="text-muted mb-0" style="font-size: 0.8rem;">
+            {% if item.child.last_login_at %}
+            🕒 آخر دخول: {{ item.child.last_login_at|date:"Y-m-d" }} الساعة {{ item.child.last_login_at|time:"H:i" }}
+            {% else %}
+            🕒 لم يسجّل دخول بعد
+            {% endif %}
+          </p>
         </div>
       </div>
       {% endfor %}

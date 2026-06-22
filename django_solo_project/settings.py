@@ -23,9 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '_x2*^5=*-s_!8i%$203zk4)asp+$+f1$wdt_4iuf5*av054i23'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['13.60.48.66']
 
 
 # Application definition
@@ -78,8 +78,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'missionfamily',
-        'USER': 'root',
-        'PASSWORD': '5781',
+        'USER': 'mfuser',
+        'PASSWORD': 'Mohammed@5781',
         'HOST': 'localhost',
         'PORT': '3306',
         'OPTIONS': {
@@ -121,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Hebron'
 
 USE_I18N = True
 
@@ -134,3 +134,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# إعدادات الجلسة - يبقى المستخدم مسجلاً 60 يوم حتى بعد إغلاق المتصفح
+SESSION_COOKIE_AGE = 5184000  # 60 يوم بالثواني
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_SAVE_EVERY_REQUEST = True

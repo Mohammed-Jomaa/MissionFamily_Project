@@ -49,10 +49,16 @@
       {% if my_submission %}
       {% if my_submission.is_approved %}
       <p class="text-success mt-3">✅ تمت الموافقة على هذه المهمة 🎉</p>
+      {% if my_submission.approval_note %}
+      <div class="alert alert-success">ملاحظة من ولي الأمر: {{ my_submission.approval_note }}</div>
+      {% endif %}
       {% include 'tasks/_proof_files.html' with files=my_submission.files.all %}
 
       {% elif my_submission.is_approved == False %}
       <p class="text-danger mt-3">❌ تم رفض المهمة</p>
+      {% if my_submission.rejection_reason %}
+      <div class="alert alert-warning">سبب الرفض: {{ my_submission.rejection_reason }}</div>
+      {% endif %}
       {% include 'tasks/_proof_files.html' with files=my_submission.files.all %}
 
       {% if task.is_closed %}
@@ -63,6 +69,10 @@
         <div class="mb-2">
           <label class="form-label">📤 إعادة إرسال الإثبات (صور / فيديو / صوت - يمكن اختيار أكثر من ملف):</label>
           <input type="file" name="proof" accept="image/*,video/*,audio/*" class="form-control" multiple required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">📝 ملاحظة (اختياري):</label>
+          <textarea name="child_note" class="form-control" rows="2" placeholder="اكتب ملاحظة لولي الأمر..."></textarea>
         </div>
         <button type="submit" class="btn btn-warning w-100">إرسال من جديد</button>
       </form>
@@ -82,6 +92,10 @@
         <div class="mb-2">
           <label class="form-label">📤 إرفاق إثبات (صور / فيديو / صوت - يمكن اختيار أكثر من ملف):</label>
           <input type="file" name="proof" accept="image/*,video/*,audio/*" class="form-control" multiple required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">📝 ملاحظة (اختياري):</label>
+          <textarea name="child_note" class="form-control" rows="2" placeholder="اكتب ملاحظة لولي الأمر..."></textarea>
         </div>
         <button type="submit" class="btn btn-orange w-100">إرسال المهمة</button>
       </form>

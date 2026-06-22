@@ -1,8 +1,19 @@
+# ملفات الميديا (صور وفيديوهات الأطفال - خصوصية + حجم كبير)
+media/
+
+# الملفات الثابتة المجمّعة
+staticfiles/
+
+# النسخ الاحتياطية
+*.backup
+*_backup*.py
+*_backup*.html
+models_backup_*.py
+views_backup_*.py
+
+# ملفات Python المؤقتة
 __pycache__/
-*.py[cod]
-env/
+*.pyc
+
+# البيئة الافتراضية
 venv/
-db.sqlite3
-.vscode/
-.env
-.DS_Store

@@ -170,6 +170,9 @@ class RewardManager(models.Manager):
 # ====== MODELS ======
 
 class User(models.Model):
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+
     ROLE_CHOICES = (
         ('parent', 'Parent'),
         ('child', 'Child'),
@@ -180,12 +183,16 @@ class User(models.Model):
     birth_day = models.DateField()
     password = models.CharField(max_length=60)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='child')
+    last_login_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     objects = UserManager()
 
 
 class Family(models.Model):
+    def __str__(self):
+        return self.name
+
     name = models.CharField(max_length=100)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_families')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -194,17 +201,31 @@ class Family(models.Model):
 
 
 class FamilyMember(models.Model):
+    def __str__(self):
+        return f"{self.user} - {self.family}"
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     family = models.ForeignKey(Family, on_delete=models.CASCADE)
     joined_at = models.DateTimeField(auto_now_add=True)
 
 
 class Task(models.Model):
+    def __str__(self):
+        return self.title
+
     title = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks')
     family = models.ForeignKey(Family, on_delete=models.CASCADE)
     points = models.IntegerField(default=10)
+    TIME_CHOICES = (
+        ('', 'غير محدد'),
+        ('الصبح', 'الصبح'),
+        ('الظهر', 'الظهر'),
+        ('العصر', 'العصر'),
+        ('بعد المغرب', 'بعد المغرب'),
+    )
+    suggested_time = models.CharField(max_length=20, choices=TIME_CHOICES, blank=True, default='')
     due_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -219,10 +240,16 @@ class Task(models.Model):
 
 
 class TaskSubmission(models.Model):
+    def __str__(self):
+        return f"{self.child} - {self.task}"
+
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     child = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'child'})
     submitted_at = models.DateTimeField(auto_now_add=True)
     is_approved = models.BooleanField(null=True, default=None)
+    rejection_reason = models.TextField(blank=True, default='')
+    approval_note = models.TextField(blank=True, default='')
+    child_note = models.TextField(blank=True, default='')
 
     @property
     def is_late(self):
@@ -233,12 +260,18 @@ class TaskSubmission(models.Model):
 
 
 class SubmissionFile(models.Model):
+    def __str__(self):
+        return f"ملف: {self.file.name}"
+
     submission = models.ForeignKey(TaskSubmission, on_delete=models.CASCADE, related_name='files')
     file = models.FileField(upload_to='task_proofs/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
 
 class Reward(models.Model):
+    def __str__(self):
+        return self.title
+
     title = models.CharField(max_length=100)
     points_cost = models.PositiveIntegerField()
     quantity = models.PositiveIntegerField(default=1)  # عدد مرات الاستبدال المتاحة
@@ -251,12 +284,18 @@ class Reward(models.Model):
 
 
 class PointsTransaction(models.Model):
+    def __str__(self):
+        return f"{self.child}: {self.points} نقطة"
+
     child = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'child'})
     points = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
 
 class ClaimedReward(models.Model):
+    def __str__(self):
+        return f"{self.child} - {self.reward}"
+
     child = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'child'})
     reward = models.ForeignKey(Reward, on_delete=models.CASCADE)
     family = models.ForeignKey(Family, on_delete=models.CASCADE, null=True, blank=True)

@@ -1,0 +1,48 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تقدّم الأطفال</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'CSS/style.css' %}" rel="stylesheet" />
+</head>
+<body>
+    <main class="container px-2 py-4">
+        <h3 class="fw-bold mb-4 text-center">📊 تقدّم الأطفال - {{ family.name }}</h3>
+        <p class="text-center text-muted">إجمالي المهام: {{ total_tasks }}</p>
+
+        {% if progress %}
+        <div class="row g-3 justify-content-center">
+            {% for p in progress %}
+            <div class="col-12 col-md-8">
+                <div class="card shadow-sm p-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-bold">{{ p.child.first_name }} {{ p.child.last_name }}</span>
+                        <span class="text-muted">{{ p.done }} / {{ p.total }} مهمة ({{ p.percent }}%)</span>
+                    </div>
+                    <div class="progress" style="height: 22px;">
+                        <div class="progress-bar bg-success" role="progressbar"
+                             style="width: {{ p.percent }}%;">
+                            {{ p.percent }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center">لا يوجد أطفال في هذه العائلة بعد.</p>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{% url 'manage_family' family.id %}" class="btn btn-outline-orange">العودة لإدارة العائلة</a>
+        </div>
+    </main>
+    <footer class="text-center text-muted py-3 mt-5">
+        <a href="{% url 'about' %}">من نحن</a> | جميع الحقوق محفوظة © 2025
+    </footer>
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>
